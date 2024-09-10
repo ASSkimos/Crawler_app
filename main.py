@@ -1,17 +1,13 @@
 import asyncio
-import threading
 import tkinter as tk
 from tkinter import ttk, messagebox
+import aiohttp
 
 from logic import get_user_data_vk, translate_to_russian, format_date
 
 
 class SocialMediaCrawler:
     def __init__(self, root):
-        self.result_text = None
-        self.crawl_button = None
-        self.access_token_entry = None
-        self.user_id_entry = None
         self.root = root
         self.root.title("Краулер")
         self.create_widgets()
@@ -40,17 +36,13 @@ class SocialMediaCrawler:
             messagebox.showerror("Ошибка ввода", "Пожалуйста, введите корректно ID пользователя и токен доступа")
             return
 
-        # Запуск асинхронного поиска данных в отдельном потоке
-        threading.Thread(target=self.run_async_task, args=(user_id, access_token)).start()
+        # Запуск асинхронного поиска данных в основном потоке
+        asyncio.run(self.run_async_task(user_id, access_token))
 
-    def run_async_task(self, user_id, access_token):
-        # Запуск asyncio события в отдельном потоке
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        data = loop.run_until_complete(get_user_data_vk(user_id, access_token))
-        loop.close()
-        # Обновляем GUI в главном потоке
-        self.root.after(0, self.display_result, data)
+    async def run_async_task(self, user_id, access_token):
+        async with aiohttp.ClientSession() as session:
+            data = await get_user_data_vk(session, user_id, access_token)
+            self.display_result(data)
 
     def format_data(self, data):
         formatted_data = []
@@ -101,12 +93,10 @@ class SocialMediaCrawler:
         else:
             self.result_text.insert(tk.END, "Ошибка: " + str(data))
 
-
 def main():
     root = tk.Tk()
     app = SocialMediaCrawler(root)
     root.mainloop()
-
 
 if __name__ == "__main__":
     main()
