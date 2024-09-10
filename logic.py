@@ -1,5 +1,4 @@
 import asyncio
-from datetime import datetime
 
 
 async def fetch_data(session, url):
@@ -40,42 +39,3 @@ async def get_user_data_vk(session, user_id, access_token):
         return user_data
     else:
         return {"error": "Не удалось получить данные пользователя"}
-
-
-def translate_to_russian(key):
-    translations = {
-        "political": "Политические взгляды",
-        "langs": "Языки",
-        "inspired_by": "Вдохновляется",
-        "people_main": "Главное в людях",
-        "life_main": {
-            "1": "Семья и дети",
-            "2": "Карьера и деньги",
-            "3": "Развлечения и отдых",
-            "4": "Наука и исследования",
-            "5": "Совершенствование мира",
-            "6": "Саморазвитие",
-            "7": "Красота и искусство",
-            "8": "Слава и влияние"
-        },
-        "smoking": "Отношение к курению",
-        "alcohol": {
-            "0": "Негативное",
-            "1": "Компромиссное",
-            "2": "Нейтральное",
-            "3": "Положительное"
-        },
-        "friends": "Друзья",
-        "followers_count": "Количество подписчиков",
-        "likes": "Лайки",
-        "text": "Текст",
-        "date": "Дата",
-        "religion": "Религия",
-        "religion_id": "Id религии",
-        "langs_full": "Информация о религии"
-    }
-    return translations.get(key, key)
-
-
-def format_date(timestamp):
-    return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')

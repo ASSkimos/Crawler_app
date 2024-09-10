@@ -2,8 +2,8 @@ import asyncio
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import aiohttp
-
-from logic import get_user_data_vk, translate_to_russian, format_date
+from logic import get_user_data_vk
+import formatting
 
 
 class SocialMediaCrawler:
@@ -53,51 +53,10 @@ class SocialMediaCrawler:
             data = await get_user_data_vk(session, user_id, access_token)
             self.display_result(data)
 
-    def format_data(self, data):
-        formatted_data = []
-        if 'first_name' in data and 'last_name' in data:
-            formatted_data.append(f"Имя: {data['first_name']} {data['last_name']}")
-        if 'bdate' in data:
-            formatted_data.append(f"Дата рождения: {data['bdate']}")
-        if 'city' in data:
-            formatted_data.append(f"Город: {data['city']['title']}")
-        if 'country' in data:
-            formatted_data.append(f"Страна: {data['country']['title']}")
-        if 'education' in data:
-            formatted_data.append(f"Образование: {data.get('university_name', 'Не указано')}")
-        if 'contacts' in data:
-            contacts = data['contacts']
-            if 'mobile_phone' in contacts:
-                formatted_data.append(f"Мобильный телефон: {contacts['mobile_phone']}")
-            if 'home_phone' in contacts:
-                formatted_data.append(f"Домашний телефон: {contacts['home_phone']}")
-        if 'personal' in data:
-            personal_info = data['personal']
-            formatted_data.append("Пункты жизненной позиции:")
-            for key, value in personal_info.items():
-                formatted_data.append(f"{translate_to_russian(key)}: {value}")
-        if 'friends' in data:
-            friends = data['friends']
-            formatted_data.append("Друзья:")
-            for friend in friends:
-                formatted_data.append(f"{friend['first_name']} {friend['last_name']} (ID: {friend['id']})")
-        if 'followers_count' in data:
-            formatted_data.append(f"Количество подписчиков: {data['followers_count']}")
-        if 'posts' in data:
-            posts = data['posts']
-            formatted_data.append("Недавние публикации:")
-            for post in posts:
-                formatted_data.append(f"Текст: {post.get('text', 'Без текста')}")
-                formatted_data.append(f"Дата: {format_date(post['date'])}")
-                formatted_data.append(f"Лайки: {post['likes']['count']}")
-                formatted_data.append("")
-
-        return "\n".join(formatted_data)
-
     def display_result(self, data):
         self.result_text.delete(1.0, tk.END)
         if isinstance(data, dict):
-            formatted_data = self.format_data(data)
+            formatted_data = formatting.format_and_translate_data(data)
             self.result_text.insert(tk.END, formatted_data)
         else:
             self.result_text.insert(tk.END, "Ошибка: " + str(data))
