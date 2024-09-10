@@ -2,11 +2,16 @@ import asyncio
 import threading
 import tkinter as tk
 from tkinter import ttk, messagebox
+
 from logic import get_user_data_vk, translate_to_russian, format_date
 
 
 class SocialMediaCrawler:
     def __init__(self, root):
+        self.result_text = None
+        self.crawl_button = None
+        self.access_token_entry = None
+        self.user_id_entry = None
         self.root = root
         self.root.title("Краулер")
         self.create_widgets()
