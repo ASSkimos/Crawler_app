@@ -1,5 +1,4 @@
-import asyncio
-
+import asyncio          #библиотека для параллельного выполнения GET-запросов
 
 async def fetch_data(session, url):
     try:

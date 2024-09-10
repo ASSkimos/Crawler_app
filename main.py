@@ -6,14 +6,14 @@ from logic import get_user_data_vk
 import formatting
 
 
-class SocialMediaCrawler:
+class SocialMediaCrawler:    #реализация класса Краулер, включающая в себя создание оконного приложения
     def __init__(self, root):
         self.root = root
         self.root.title("Краулер")
         self.create_widgets()
 
 
-    def create_widgets(self):
+    def create_widgets(self): # размещение в окне основных виджетов
         frame = ttk.Frame(self.root, padding="10")
         frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
