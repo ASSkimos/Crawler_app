@@ -1,3 +1,5 @@
+import asyncio
+import threading
 import tkinter as tk
 from tkinter import ttk, messagebox
 from logic import get_user_data_vk, translate_to_russian, format_date
@@ -24,23 +26,6 @@ class SocialMediaCrawler:
         self.result_text.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E))
         frame.columnconfigure(1, weight=1)
         frame.rowconfigure(4, weight=1)
-        self.bind_paste(self.user_id_entry)
-        self.bind_paste(self.access_token_entry)
-        self.bind_paste(self.result_text)
-
-    def bind_paste(self, widget):
-        if isinstance(widget, tk.Text) or isinstance(widget, ttk.Entry):
-            widget.bind("<Control-v>", self.paste)
-
-    def paste(self, event):
-        try:
-            widget = event.widget
-            clipboard_text = self.root.clipboard_get()
-            widget.delete(0, tk.END) if isinstance(widget, ttk.Entry) else widget.delete(1.0, tk.END)
-            widget.insert(tk.INSERT, clipboard_text)
-            return "break"
-        except tk.TclError:
-            pass
 
     def crawl(self):
         user_id = self.user_id_entry.get()
@@ -50,8 +35,17 @@ class SocialMediaCrawler:
             messagebox.showerror("Ошибка ввода", "Пожалуйста, введите корректно ID пользователя и токен доступа")
             return
 
-        data = get_user_data_vk(user_id, access_token)
-        self.display_result(data)
+        # Запуск асинхронного поиска данных в отдельном потоке
+        threading.Thread(target=self.run_async_task, args=(user_id, access_token)).start()
+
+    def run_async_task(self, user_id, access_token):
+        # Запуск asyncio события в отдельном потоке
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        data = loop.run_until_complete(get_user_data_vk(user_id, access_token))
+        loop.close()
+        # Обновляем GUI в главном потоке
+        self.root.after(0, self.display_result, data)
 
     def format_data(self, data):
         formatted_data = []
@@ -103,7 +97,11 @@ class SocialMediaCrawler:
             self.result_text.insert(tk.END, "Ошибка: " + str(data))
 
 
-if __name__ == "__main__":
+def main():
     root = tk.Tk()
     app = SocialMediaCrawler(root)
     root.mainloop()
+
+
+if __name__ == "__main__":
+    main()

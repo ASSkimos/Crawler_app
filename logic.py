@@ -1,44 +1,62 @@
-import requests
+import aiohttp
+import asyncio
 from datetime import datetime
 
 
-def get_friends_vk(user_id, access_token):
-    response = requests.get(
-        f'https://api.vk.com/method/friends.get?user_id={user_id}&fields=nickname&access_token={access_token}&v=5.130'
-    )
-    data = response.json()
-    if "response" in data:
-        return data["response"]["items"]
-    else:
-        return []
+async def get_friends_vk(user_id, access_token):
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(
+                f'https://api.vk.com/method/friends.get?user_id={user_id}&fields=nickname&access_token={access_token}&v=5.130'
+            ) as response:
+                data = await response.json()
+                if "response" in data:
+                    return data["response"]["items"]
+                else:
+                    return []
+        except Exception as e:
+            print(f"Ошибка при получении друзей: {e}")
+            return []
 
 
-def get_user_data_vk(user_id, access_token):
+async def get_posts_vk(user_id, access_token):
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(
+                f'https://api.vk.com/method/wall.get?owner_id={user_id}&access_token={access_token}&v=5.130'
+            ) as response:
+                data = await response.json()
+                if "response" in data:
+                    return data["response"]["items"]
+                else:
+                    return []
+        except Exception as e:
+            print(f"Ошибка при получении постов: {e}")
+            return []
+
+
+async def get_user_data_vk(user_id, access_token):
     fields = "bdate,city,country,education,contacts,personal,connections,followers_count"
-    response = requests.get(
-        f'https://api.vk.com/method/users.get?user_ids={user_id}&fields={fields}&access_token={access_token}&v=5.130'
-    )
-    data = response.json()
-    if "response" in data:
-        user_data = data["response"][0]
-        friends_data = get_friends_vk(user_id, access_token)
-        posts_data = get_posts_vk(user_id, access_token)
-        user_data['friends'] = friends_data
-        user_data['posts'] = posts_data
-        return user_data
-    else:
-        return data
-
-
-def get_posts_vk(user_id, access_token):
-    response = requests.get(
-        f'https://api.vk.com/method/wall.get?owner_id={user_id}&access_token={access_token}&v=5.130'
-    )
-    data = response.json()
-    if "response" in data:
-        return data["response"]["items"]
-    else:
-        return []
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(
+                f'https://api.vk.com/method/users.get?user_ids={user_id}&fields={fields}&access_token={access_token}&v=5.130'
+            ) as response:
+                data = await response.json()
+                if "response" in data:
+                    user_data = data["response"][0]
+                    friends_data, posts_data = await asyncio.gather(
+                        get_friends_vk(user_id, access_token),
+                        get_posts_vk(user_id, access_token)
+                    )
+                    user_data['friends'] = friends_data
+                    user_data['posts'] = posts_data
+                    return user_data
+                else:
+                    return data
+        except Exception as e:
+            print(f"Ошибка при получении данных пользователя: {e}")
+            return {"error": str(e)}
 
 
 def translate_to_russian(key):
@@ -73,10 +91,7 @@ def translate_to_russian(key):
         "religion_id": "Id религии",
         "langs_full": "Информация о религии"
     }
-    if key in translations:
-        return translations[key]
-    else:
-        return key
+    return translations.get(key, key)
 
 
 def format_date(timestamp):
